@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/janeczku/rancher-letsencrypt/letsencrypt"
-	"github.com/janeczku/rancher-letsencrypt/rancher"
+	"./letsencrypt"
+	"./rancher"
 )
 
 const (
@@ -46,6 +46,11 @@ func (c *Context) InitContext() {
 	certNameParam := getEnvOption("CERT_NAME", true)
 	timeParam := getEnvOption("RENEWAL_TIME", true)
 	providerParam := getEnvOption("PROVIDER", true)
+	challengeParam := getEnvOption("CHALLENGE", false)
+
+	if len(challengeParam) == 0 {
+		challengeParam = "DNS";
+	}
 
 	if eulaParam != "Yes" {
 		logrus.Fatalf("Terms of service were not accepted")
@@ -88,7 +93,7 @@ func (c *Context) InitContext() {
 		OvhConsumerKey:       getEnvOption("OVH_CONSUMER_KEY", false),
 	}
 
-	c.Acme, err = letsencrypt.NewClient(emailParam, keyType, apiVersion, providerOpts)
+	c.Acme, err = letsencrypt.NewClient(emailParam, keyType, apiVersion, providerOpts, challengeParam)
 	if err != nil {
 		logrus.Fatalf("LetsEncrypt client: %v", err)
 	}

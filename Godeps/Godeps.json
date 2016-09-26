@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/janeczku/rancher-letsencrypt",
+	"ImportPath": "github.com/ipunkt/rancher-letsencrypt",
 	"GoVersion": "go1.5",
 	"GodepVersion": "v74",
 	"Deps": [

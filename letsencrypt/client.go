@@ -59,7 +59,7 @@ type Client struct {
 }
 
 // NewClient returns a new Lets Encrypt client
-func NewClient(email string, kt KeyType, apiVer ApiVersion, provider ProviderOpts) (*Client, error) {
+func NewClient(email string, kt KeyType, apiVer ApiVersion, provider ProviderOpts, challengeType string) (*Client, error) {
 	var keyType lego.KeyType
 	switch kt {
 	case RSA2048:
@@ -121,17 +121,31 @@ func NewClient(email string, kt KeyType, apiVer ApiVersion, provider ProviderOpt
 		logrus.Infof("Using locally stored Let's Encrypt account for %s", email)
 	}
 
-	prov, err := getProvider(provider)
-	if err != nil {
-		return nil, fmt.Errorf("Could not set DNS provider: %v", err)
+	if challengeType == "HTTP" {
+
+		err = client.SetHTTPAddress("0.0.0.0:80");
+		if err != nil {
+			return nil, fmt.Errorf("Could not set HTTP address: %v", err)
+		}
+
+		client.ExcludeChallenges([]lego.Challenge{lego.DNS01, lego.TLSSNI01})
+
+	} else {
+		prov, err := getProvider(provider)
+		if err != nil {
+			return nil, fmt.Errorf("Could not set DNS provider: %v", err)
+		}
+
+
+		err = client.SetChallengeProvider(lego.DNS01, prov)
+		if err != nil {
+			return nil, fmt.Errorf("Could not set DNS provider: %v", err)
+		}
+
+		client.ExcludeChallenges([]lego.Challenge{lego.HTTP01, lego.TLSSNI01})
+
 	}
 
-	err = client.SetChallengeProvider(lego.DNS01, prov)
-	if err != nil {
-		return nil, fmt.Errorf("Could not set DNS provider: %v", err)
-	}
-
-	client.ExcludeChallenges([]lego.Challenge{lego.HTTP01, lego.TLSSNI01})
 
 	return &Client{
 		client:     client,
